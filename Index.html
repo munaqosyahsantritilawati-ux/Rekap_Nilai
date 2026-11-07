@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+  <meta property="og:image" content="https://munaqosyahsantritilawati-ux.github.io/Munaqosyah2026/Munaqosyah.png" />
+  <title>Rekap Nilai Santri</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">  
+<style>
+  /* Semua isi pakai Nunito */
+  * {
+    font-family: 'Nunito', sans-serif;
+  }
+  body{
+      color: #283618;
+      background: #f5f5f5; /* abu2 biar kartu ngambang */
+      padding: 30px 25px;
+      margin: 0;
+    }
+
+    /* 1. KARTU NGAMBANG */
+   .container-form {
+      background: #ffffff; /* Cream palet */
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      max-width: 700px;
+      margin: auto;
+    }
+
+  select, input{
+    width:100%; 
+    padding:10px; 
+    margin:5px 0 12px 0; 
+    box-sizing:border-box;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+  }
+
+  /* CUMA JUDUL yang pakai Poppins */
+  .judul-utama {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-top: 5px;
+      padding-bottom: 16px;
+      border-bottom: 3px solid #9CAF88;
+      font-size: 28px;
+      font-weight: 800;
+      color: #283618;
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      z-index: 100;
+    }
+
+    .judul-utama span {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+   .logo-header img {
+      height: auto;
+      width: 60px;
+      margin: 0 4px;
+      vertical-align: middle;
+    }
+
+  table{
+    width:100%; 
+    border-collapse:collapse;
+    table-layout: fixed
+  }
+
+  /* Atur lebar tiap kolom */
+  th:nth-child(1) { width: 45px; }
+  th:nth-child(2) { width: auto; }
+  th:nth-child(3) { width: 95px; }
+  th:nth-child(4) { width: 95px; }
+  th:nth-child(5) { width: 95px; }
+
+  th{
+    border:1px solid #ccc; 
+    padding:8px; 
+    text-align:center
+  }
+
+  td{
+    border:1px solid #ccc; 
+    padding:8px; 
+    text-align:left
+  }
+
+  td:nth-child(1), td:nth-child(3), td:nth-child(4), td:nth-child(5){
+    border:1px solid #ccc; 
+    padding:8px; 
+    text-align:center
+  }
+
+  th{
+    position: sticky;
+    top: 83px;
+    background:#f0f0f0;
+    z-index: 50;
+  }
+  td input{
+    margin:0; 
+    padding:8px;
+    border-radius:8px;
+    text-align:center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  button{
+    background:#917006; 
+    color:white; 
+    padding:8px; 
+    border:none; 
+    width: 25%;
+    position: relative;
+    left: 37.5%;
+    border-radius:8px; 
+    font-size:16px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif; 
+    margin-top:15px
+  }
+  button:disabled{background:#999}
+</style>
+</head>
+<body>
+
+<div class="container-form"> <!-- INI KUNCINYA BIAR NGAMBANG -->
+ <h2 class="judul-utama">
+  <span>REKAP NILAI SANTRI 2026</span>
+  <div class="logo-header">
+    <img src="https://drive.google.com/thumbnail?id=1czAiga44ktUJl2gmmWta906lQUyIXNMh&sz=w80">
+    <img src="https://drive.google.com/thumbnail?id=15aD27nI0gHQY6hfU89hpZ3HKPymZiPQJ&sz=w80">
+    <img src="https://drive.google.com/thumbnail?id=1dRonLssiVvCbBaQmIem5OMX4bAA9-mFd&sz=w80">
+    <img src="./LogoMu.png" alt="Logo">
+  </div>
+</h2>  
+
+<h3>Identitas Lembaga</h3>
+<label>ID Lembaga</label>
+<select id="idLembaga"><option>Loading...</option></select>
+<label>Nama Lembaga</label>
+<input id="namaLembaga" readonly placeholder="Otomatis">
+
+<h3>Daftar Nilai</h3>
+<table>
+  <thead><tr>
+    <th>No</th>
+    <th>Nama Santri</th>
+    <th>Doa Harian</th>
+    <th>Sholat</th>
+    <th>Wudlu</th>
+  </tr>
+</thead>
+  <tbody id="tbodySantri">
+    <tr>
+      <td colspan="5">Pilih lembaga dulu</td>
+    </tr>
+  </tbody>
+</table>
+
+<button id="btnKirim" onclick="kirim()">Simpan Nilai</button>
+
+<script>
+const URL_EXEC = "https://script.google.com/macros/s/AKfycbxBs_J5rYVc5B-QB6A-4h9xn96nQh13zeqdGH5IOSWLfQhFzQ3lI4SVQ3ZZFFdZjbtpMw/exec";
+
+const selLembaga = document.getElementById("idLembaga");
+const inpNamaLembaga = document.getElementById("namaLembaga");
+const tbody = document.getElementById("tbodySantri");
+let dataLembagaMap = {};
+
+fetch(`${URL_EXEC}?action=getLembaga`)
+.then(r=>r.json()).then(data=>{
+  selLembaga.innerHTML = '<option value="">-- Pilih Lembaga --</option>';
+  data.forEach(item=>{
+    dataLembagaMap[item.id] = item.nama;
+    selLembaga.innerHTML += `<option value="${item.id}">${item.id}</option>`;
+  });
+});
+
+selLembaga.addEventListener("change", ()=>{
+  const id = selLembaga.value;
+  inpNamaLembaga.value = dataLembagaMap[id] || "";
+  if(!id) return;
+  tbody.innerHTML = "<tr><td colspan=5>Loading santri...</td></tr>";
+  fetch(`${URL_EXEC}?action=getSantri&id=${id}`)
+  .then(r=>r.json()).then(santri=>{
+    tbody.innerHTML = "";
+    santri.forEach(s=>{
+      tbody.innerHTML += `
+      <tr>
+        <td>${s.no}</td>
+        <td>${s.nama}<input type="hidden" class="nama" value="${s.nama}"><input type="hidden" class="no" value="${s.no}"></td>
+        <td><input type="number" class="Doa_Harian" min="0" max="95" placeholder="0 - 95"></td>
+        <td><input type="number" class="Sholat" min="0" max="95" placeholder="0 - 95"></td>
+        <td><input type="number" class="Wudlu" min="0" max="95" placeholder="0 - 95"></td>
+      </tr>`;
+    });
+  });
+});
+
+async function kirim(){
+  const btn = document.getElementById("btnKirim");
+  btn.disabled = true; btn.innerText = "Menyimpan...";
+
+  const rows = document.querySelectorAll("#tbodySantri tr");
+  const payload = [];
+  rows.forEach(r=>{
+    if(!r.querySelector(".nama")) return;
+    payload.push({
+      idLembaga: selLembaga.value,
+      namaLembaga: inpNamaLembaga.value,
+      no: r.querySelector(".no").value,
+      nama: r.querySelector(".nama").value,
+      Doa_Harian: r.querySelector(".Doa_Harian").value || "",
+      Sholat: r.querySelector(".Sholat").value || "",
+      Wudlu: r.querySelector(".Wudlu").value || ""
+    });
+  });
+
+  if(payload.length==0){ alert("Pilih lembaga dulu"); btn.disabled=false; btn.innerText="Simpan Nilai"; return; }
+
+  try {
+    // 1. Minta kunci sekali pakai
+    const tokenRes = await fetch(`${URL_EXEC}?action=getToken`).then(r=>r.json());
+    // 2. Kirim pakai kunci itu
+    const res = await fetch(`${URL_EXEC}?token=${tokenRes.token}`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }).then(r=>r.json());
+
+    if(res.status == "sukses"){
+      alert("Jazakumullohu khoiron katsiir. Alhamdulillaah, Nilai berhasil disimpan!");
+      location.reload();
+    } else {
+      alert(res.message || "Gagal simpan");
+      btn.disabled=false; btn.innerText="Simpan Nilai";
+    }
+  } catch(err){
+    alert("Error: " + err);
+    btn.disabled=false; btn.innerText="Simpan Nilai";
+  }
+}
+</script>
+</body>
+</html>
