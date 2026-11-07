@@ -72,6 +72,13 @@
       vertical-align: middle;
     }
 
+  .wrapper {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+    }
+   .kiri,.kanan { width: 50%; }
+  
   table{
     width:100%; 
     border-collapse:collapse;
@@ -131,6 +138,11 @@
     margin-top:15px
   }
   button:disabled{background:#999}
+
+  @media (max-width: 900px) {
+     .wrapper {flex-direction: column;}
+     .kiri,.kanan {width: 100%;}
+  
 </style>
 </head>
 <body>
@@ -147,10 +159,15 @@
 </h2>  
 
 <h3>Identitas Lembaga</h3>
-<label>ID Lembaga</label>
-<select id="idLembaga"><option>Loading...</option></select>
-<label>Nama Lembaga</label>
-<input id="namaLembaga" readonly placeholder="Otomatis">
+<div class="wrapper">
+  <div class="kiri">
+    <label>ID Lembaga</label>
+    <select id="idLembaga"><option>Loading...</option></select>
+  </div>
+  <div class="kanan">
+    <label>Nama Lembaga</label>
+    <input id="namaLembaga" readonly placeholder="Otomatis">
+  </div>
   
 <h3>Daftar Nilai</h3>
 <table>
