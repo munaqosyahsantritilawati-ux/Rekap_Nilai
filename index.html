@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -143,6 +144,10 @@
   @media (max-width: 900px) {
      .wrapper {flex-direction: column;}
      .kiri,.kanan {width: 100%;}
+
+  #modalSukses *, #modalError *{
+  box-sizing: border-box;
+  }   
   
 </style>
 </head>
@@ -220,7 +225,7 @@ selLembaga.addEventListener("change", ()=>{
       <tr>
         <td>${s.no}</td>
         <td>${s.nama}<input type="hidden" class="nama" value="${s.nama}"><input type="hidden" class="no" value="${s.no}"></td>
-        <td><input type="number" class="Doa_Harian" min="0" max="95" placeholder="0 - 95"></td>
+        <td><input type="number" class="Doa_Harian" min="0" max="90" placeholder="0 - 90"></td>
         <td><input type="number" class="Sholat" min="0" max="95" placeholder="0 - 95"></td>
         <td><input type="number" class="Wudlu" min="0" max="95" placeholder="0 - 95"></td>
       </tr>`;
@@ -229,47 +234,162 @@ selLembaga.addEventListener("change", ()=>{
 });
 
 async function kirim(){
-  const btn = document.getElementById("btnKirim");
-  btn.disabled = true; btn.innerText = "Menyimpan...";
+  const id = selLembaga.value;
+  if(!id){
+    tampilModalError("Pilih lembaga dulu!");
+    return;
+  }
 
-  const rows = document.querySelectorAll("#tbodySantri tr");
-  const payload = [];
-  rows.forEach(r=>{
-    if(!r.querySelector(".nama")) return;
-    payload.push({
-      idLembaga: selLembaga.value,
-      namaLembaga: inpNamaLembaga.value,
-      no: r.querySelector(".no").value,
-      nama: r.querySelector(".nama").value,
-      Doa_Harian: r.querySelector(".Doa_Harian").value || "",
-      Sholat: r.querySelector(".Sholat").value || "",
-      Wudlu: r.querySelector(".Wudlu").value || ""
-    });
+  const rows = [...document.querySelectorAll("#tbodySantri tr")];
+  if(rows.length === 0){
+    tampilModalError("Tidak ada santri untuk lembaga ini.");
+    return;
+  }
+
+  // --- VALIDASI: SEMUA WAJIB DIISI ---
+  const yangKurang = [];
+  const yangSalahRange = [];
+  let pertamaYangKosong = null;
+
+  rows.forEach((r, i) => {
+    const nama = r.querySelector(".nama")?.value || "Santri ke-" + (i+1);
+    const doa = r.querySelector(".Doa_Harian");
+    const sholat = r.querySelector(".Sholat");
+    const wudlu = r.querySelector(".Wudlu");
+
+    [doa, sholat, wudlu].forEach(inp => { if(inp) inp.style.border = ""; });
+
+    const kosong = [];
+    if(!doa || doa.value === "") kosong.push("Doa Harian");
+    if(!sholat || sholat.value === "") kosong.push("Sholat");
+    if(!wudlu || wudlu.value === "") kosong.push("Wudlu");
+
+    if(kosong.length > 0){
+      yangKurang.push("• " + nama + " -> kurang: " + kosong.join(", "));
+      [doa, sholat, wudlu].forEach(inp => {
+        if(inp && inp.value === "") inp.style.border = "2px solid red";
+      });
+      if(!pertamaYangKosong) pertamaYangKosong = [doa, sholat, wudlu].find(inp => inp && inp.value === "");
+    } else {
+      
+      // 👇 INI YANG BARU, PASTE DI TEMPAT YANG SAMA PERSIS
+const batasMax = {
+  Doa_Harian: 90,
+  Sholat: 95,
+  Wudlu: 95
+};
+
+[doa, sholat, wudlu].forEach(inp => {
+  // Cari nama kolomnya dari class-nya
+  const namaKolom = ["Doa_Harian","Sholat","Wudlu"].find(c => inp.classList.contains(c));
+  const max = batasMax[namaKolom];
+  const v = Number(inp.value);
+  if(v < 0 || v > max){
+    yangSalahRange.push("• " + nama + " - " + namaKolom + " harus 0 - " + max);
+    inp.style.border = "2px solid red";
+    if(!pertamaYangKosong) pertamaYangKosong = inp;
+  }
+});
+    }
   });
 
-  if(payload.length==0){ alert("Pilih lembaga dulu"); btn.disabled=false; btn.innerText="Simpan Nilai"; return; }
+  if(yangKurang.length > 0){
+    tampilModalError("Ada " + yangKurang.length + " nilai santri yang belum lengkap:\n\n" + yangKurang.join("\n"));
+    window._fokusKosong = pertamaYangKosong;
+    return;
+  }
+  if(yangSalahRange.length > 0){
+    tampilModalError("Nilai di luar batas:\n\n" + yangSalahRange.join("\n"));
+    window._fokusKosong = pertamaYangKosong;
+    return;
+  }
 
-  try {
-    // 1. Minta kunci sekali pakai
-    const tokenRes = await fetch(`${URL_EXEC}?action=getToken`).then(r=>r.json());
-    // 2. Kirim pakai kunci itu
-    const res = await fetch(`${URL_EXEC}?token=${tokenRes.token}`, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }).then(r=>r.json());
+  // --- KALAU LOLOS VALIDASI, BARU KIRIM ---
+  const payload = rows.map(r => ({
+    idLembaga: id,
+    namaLembaga: inpNamaLembaga.value,
+    no: r.querySelector(".no").value,
+    nama: r.querySelector(".nama").value,
+    Doa_Harian: r.querySelector(".Doa_Harian").value,
+    Sholat: r.querySelector(".Sholat").value,
+    Wudlu: r.querySelector(".Wudlu").value
+  }));
 
-    if(res.status == "sukses"){
-      alert("Jazakumullohu khoiron katsiir. Alhamdulillaah, Nilai berhasil disimpan!");
-      location.reload();
-    } else {
-      alert(res.message || "Gagal simpan");
-      btn.disabled=false; btn.innerText="Simpan Nilai";
-    }
-  } catch(err){
-    alert("Error: " + err);
-    btn.disabled=false; btn.innerText="Simpan Nilai";
+  // Sesuaikan 2 baris di bawah ini dengan kode token kamu yang lama
+  // Kalau kode token kamu beda, pakai yang lama saja
+  const tokenRes = await fetch(`${URL_EXEC}?action=getToken`).then(r=>r.json());
+  const token = tokenRes.token;
+
+  const res = await fetch(`${URL_EXEC}?token=${token}`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  }).then(r=>r.json());
+
+  if(res.status === "sukses"){
+    tampilModalSukses("Nilai " + inpNamaLembaga.value + " berhasil disimpan.");
+  } else {
+    tampilModalError(res.message || "Gagal menyimpan, coba lagi.");
   }
 }
+// ===== MODAL SUKSES & ERROR =====
+function tampilModalSukses(pesan){
+  document.getElementById("teksModalSukses").textContent = pesan || "Nilai berhasil disimpan.";
+  document.getElementById("modalSukses").style.display = "flex";
+}
+function tutupModalSukses(){
+  document.getElementById("modalSukses").style.display = "none";
+  location.reload();
+}
+function tampilModalError(pesan){
+  document.getElementById("teksModalError").textContent = pesan;
+  document.getElementById("modalError").style.display = "flex";
+}
+function tutupModalError(){
+  document.getElementById("modalError").style.display = "none";
+  if(window._fokusKosong){
+    window._fokusKosong.focus();
+    window._fokusKosong.scrollIntoView({behavior:"smooth", block:"center"});
+    window._fokusKosong = null;
+  }
+}
+// Klik di luar kotak putih = tutup
+document.getElementById("modalSukses").addEventListener("click", function(e){
+  if(e.target.id === "modalSukses") tutupModalSukses();
+});
+document.getElementById("modalError").addEventListener("click", function(e){
+  if(e.target.id === "modalError") tutupModalError();
+});
 </script>
+</style>
+ <!-- MODAL SUKSES -->
+<div id="modalSukses" style="display:none; position:fixed; inset:0; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content:center; align-items:center; padding: 16px; margin: 0; box-sizing: border-box;">
+  <div style="background:white; width: 100%; max-width: 360px; margin:auto; padding: 28px 24px; border-radius:20px; text-align:center; box-shadow: 0 20px 40px rgba(0,0,0,0.25); animation: pop .25s ease; box-sizing: border-box;">
+    
+    <div style="width: 72px; height: 72px; font-size: 38px; background: #e8f8ee; margin-bottom: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">✅</div>
+    <h3 style="margin:0 0 8px; font-size: 15px;">Alhamdulillaah!</h3>
+    <!-- 👇 INI YANG KURANG TADI, SUDAH DITAMBAH id-nya -->
+    <p id="teksModalSukses" style="margin:0 0 8px; color:#666; font-size:14px; line-height:1.5;">Nilai berhasil disimpan.</p>
+    <p style="font-style: italic; margin:0 0 20px; color:#666; font-size:14px;">Jazakumullohu Khoiron Katsiir</p>
+    <button onclick="tutupModalSukses()" style="display:block; left: 30%; width:auto; padding:12px; background:#1a7f4b; color:white; border:none; border-radius: 12px; cursor:pointer; font-size: 15px; font-weight: 700; margin:0 16px 0 0; text-align:center;">Alhamdulillaah</button>
+  </div>
+</div>
+
+<!-- MODAL ERROR/BELUM LENGKAP -->
+<div id="modalError" style="display:none; position:fixed; inset:0; background: rgba(0,0,0,0.5); z-index: 9999; justify-content:center; align-items:center; padding: 16px;">
+  <div style="background:white; width: 100%; max-width: 380px; padding: 24px; border-radius:20px; text-align:left; box-shadow: 0 20px 40px rgba(0,0,0,0.25); animation: pop .25s ease;">
+    <div style="text-align:center; font-size: 38px;">⚠️</div>
+    <h3 style="text-align:center; margin:8px 0; font-size: 19px;">Masih ada yang belum diisi!</h3>
+    <!-- 👇 INI SUDAH BENAR, TINGGAL BENERIN WARNA YANG KURANG # -->
+    <p id="teksModalError" style="color: #555; font-size: 14px; line-height: 1.6; white-space: pre-line; background: #fff5f5; padding: 12px; border-radius: 12px; border: 1px solid #ffdddd;"></p>
+    <button onclick="tutupModalError()" style="display:block; left: 37.5%; width:auto; padding:12px; background:#d32f2f; color:white; border:none; border-radius: 12px; cursor:pointer; font-size: 15px; font-weight: 700; margin-top: 16px; text-align:center;">Siap Edit!</button>
+  </div>
+</div>
+
+<style>
+  @keyframes pop {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+</style>
 </body>
 </html>
