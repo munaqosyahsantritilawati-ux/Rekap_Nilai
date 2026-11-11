@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -236,13 +235,13 @@ selLembaga.addEventListener("change", ()=>{
 async function kirim(){
   const id = selLembaga.value;
   if(!id){
-    tampilModalError("Pilih lembaga dulu!");
+    tampilModalError("Pilih lembaga dulu!", "Lembaga Belum Dipilih");
     return;
   }
 
   const rows = [...document.querySelectorAll("#tbodySantri tr")];
   if(rows.length === 0){
-    tampilModalError("Tidak ada santri untuk lembaga ini.");
+    tampilModalError("Tidak ada santri untuk lembaga ini.", "Tidak Ada Santri");
     return;
   }
 
@@ -294,12 +293,12 @@ const batasMax = {
   });
 
   if(yangKurang.length > 0){
-    tampilModalError("Ada " + yangKurang.length + " nilai santri yang belum lengkap:\n\n" + yangKurang.join("\n"));
+    tampilModalError("Ada " + yangKurang.length + " santri yang nilainya belum lengkap:\n\n" + yangKurang.join("\n"), "Masih Ada Nilai Kosong");
     window._fokusKosong = pertamaYangKosong;
     return;
   }
   if(yangSalahRange.length > 0){
-    tampilModalError("Nilai di luar batas:\n\n" + yangSalahRange.join("\n"));
+    tampilModalError("Nilai melebihi batas maksimum:\n\n" + yangSalahRange.join("\n"), "Nilai Melebihi Batas Maksimum");
     window._fokusKosong = pertamaYangKosong;
     return;
   }
@@ -340,8 +339,9 @@ function tutupModalSukses(){
   document.getElementById("modalSukses").style.display = "none";
   location.reload();
 }
-function tampilModalError(pesan){
+function tampilModalError(pesan, judul){
   document.getElementById("teksModalError").textContent = pesan;
+  document.getElementById("judulModalError").textContent = judul || "Masih ada yang belum diisi!";
   document.getElementById("modalError").style.display = "flex";
 }
 function tutupModalError(){
@@ -374,11 +374,11 @@ document.getElementById("modalError").addEventListener("click", function(e){
   </div>
 </div>
 
-<!-- MODAL ERROR/BELUM LENGKAP -->
+<!-- MODAL ERROR -->
 <div id="modalError" style="display:none; position:fixed; inset:0; background: rgba(0,0,0,0.5); z-index: 9999; justify-content:center; align-items:center; padding: 16px;">
   <div style="background:white; width: 100%; max-width: 380px; padding: 24px; border-radius:20px; text-align:left; box-shadow: 0 20px 40px rgba(0,0,0,0.25); animation: pop .25s ease;">
     <div style="text-align:center; font-size: 38px;">⚠️</div>
-    <h3 style="text-align:center; margin:8px 0; font-size: 19px;">Masih ada yang belum diisi!</h3>
+    <h3 id="judulModalError" style="text-align:center; margin:8px 0; font-size: 19px;">Masih ada yang belum diisi!</h3>
     <!-- 👇 INI SUDAH BENAR, TINGGAL BENERIN WARNA YANG KURANG # -->
     <p id="teksModalError" style="color: #555; font-size: 14px; line-height: 1.6; white-space: pre-line; background: #fff5f5; padding: 12px; border-radius: 12px; border: 1px solid #ffdddd;"></p>
     <button onclick="tutupModalError()" style="display:block; left: 37.5%; width:auto; padding:12px; background:#d32f2f; color:white; border:none; border-radius: 12px; cursor:pointer; font-size: 15px; font-weight: 700; margin-top: 16px; text-align:center;">Siap Edit!</button>
