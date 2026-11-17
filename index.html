@@ -341,7 +341,7 @@ function tutupModalSukses(){
 }
 function tampilModalError(pesan, judul){
   document.getElementById("teksModalError").textContent = pesan;
-  document.getElementById("judulModalError").textContent = judul || "Pesan Error!";
+  document.getElementById("judulModalError").textContent = judul || "PERINGATAN!";
   document.getElementById("modalError").style.display = "flex";
 }
 function tutupModalError(){
@@ -381,7 +381,7 @@ document.getElementById("modalError").addEventListener("click", function(e){
     <h3 id="judulModalError" style="text-align:center; margin:8px 0; font-size: 19px;">Masih ada yang belum diisi!</h3>
     <!-- 👇 INI SUDAH BENAR, TINGGAL BENERIN WARNA YANG KURANG # -->
     <p id="teksModalError" style="color: #555; font-size: 14px; line-height: 1.6; white-space: pre-line; background: #fff5f5; padding: 12px; border-radius: 12px; border: 1px solid #ffdddd;"></p>
-    <button onclick="tutupModalError()" style="display:block; left: 37.5%; width:auto; padding:12px; background:#d32f2f; color:white; border:none; border-radius: 12px; cursor:pointer; font-size: 15px; font-weight: 700; margin-top: 16px; text-align:center;">Siap Edit!</button>
+    <button onclick="tutupModalError()" style="display:block; left: 37.5%; width:auto; padding:12px; background:#d32f2f; color:white; border:none; border-radius: 12px; cursor:pointer; font-size: 15px; font-weight: 700; margin-top: 16px; text-align:center;">Oke!</button>
   </div>
 </div>
 
